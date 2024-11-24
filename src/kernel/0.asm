@@ -1,3 +1,3 @@
 start:
 
-times 6 * 512 db 0
+times 40 * 512 db 0

@@ -39,7 +39,7 @@ bios_println:
 
 %include 'boot/disk.asm'
 boot_sector_message:
-db '16-bits real mod: Stage 1: Boot sector stage 1 loaded at `7C00`.', 0
+db '16-bits real mod: Stage 1: Boot sector stage 1 loaded at `0x7C00`.', 0
 load_disk_message:
 db '16-bits real mod: Stage 1: Loading stage 2 from disk into memory...', 0
 disk_error_message:

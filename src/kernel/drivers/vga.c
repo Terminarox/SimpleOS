@@ -1,25 +1,50 @@
+#define MAX_ROW 25
+#define MAX_COL 80
+#define VGA_MEMORY_MONOCHROME_TEXT 0xB0000
+#define VGA_MEMORY_COLOR_TEXT 0xb8000
+#define VGA_MEMORY_GRAPHIC_MOD 0xA0000
+/* Define BackGround Color.
+ * If you want to get Font Color, divide by 0x0f (16d).
+ */
+enum VGA256_color {
+        VGA256_Black         = 0x00,
+        VGA256_Blue          = 0x10,
+        VGA256_Green         = 0x20,
+        VGA256_Cyan          = 0x30,
+        VGA256_Red           = 0x40,
+        VGA256_Magenta       = 0x50,
+        VGA256_Brown         = 0x60,
+        VGA256_White         = 0x70,
+        VGA256_Grey          = 0x80,
+        VGA256_Light_Blue    = 0x90,
+        VGA256_Light_Green   = 0xa0,
+        VGA256_Light_Cyan    = 0xb0,
+        VGA256_Light_Red     = 0xc0,
+        VGA256_Light_Magenta = 0xd0,
+        VGA256_Yellow        = 0xe0,
+        VGA256_Bright_white  = 0xf0
+
+};
+
+enum Message_Type {
+        ERROR_MESSAGE,
+        WARNING_MESSAGE,
+        SUCCESS_MESSAGE
+};
+
+struct Color_struct {
+        enum VGA256_color background;
+        enum VGA256_color foreground;
+        int color;
+}VGA_Color_Err, VGA_Color_Warn, VGA_Color_Success;
+
 struct Cursor {
         int row;
         int col;
         int cursor;
 } VGAState;
 
-// return CURSOR
-int get_cursor()
-{
-        return VGAState.cursor;
-}
-
-int get_cursor_row()
-{
-        return VGAState.row;
-}
-
-int get_cursor_col()
-{
-        return VGAState.col;
-}
-// change CURSOR according to int row and int col
+/* change CURSOR according to int row and int col */
 void update_cursor (int row, int col)
 {
         VGAState.row=row;
@@ -27,23 +52,36 @@ void update_cursor (int row, int col)
         VGAState.cursor = 2 * (VGAState.row * 80 + VGAState.col);
 }
 
-/*      DO NOT print a new line !
- * ONLY change CURSOR to the following ROW.
- */
-void print_video_memory_nl()
+void vga_print_nl ()
 {
         update_cursor(VGAState.row+1, 0);
 }
 
-/*void update_video_memory (char **video_memory)
+
+/*      DO NOT print a new line !
+ * ONLY change CURSOR to the followirror: parameter 'row' has just a forward declarationsng ROW.
+ */
+
+void save_cursor_state (struct Cursor *cursor_save_struct)
+{
+        *cursor_save_struct=VGAState;
+}
+void restore_cursor_state (struct Cursor *cursor_restore_struct)
+{
+        VGAState=*cursor_restore_struct;
+}
+void align_video_memory_to_cursor_offset (char **video_memory)
 {
         *video_memory=*(video_memory + VGAState.cursor);
+        VGAState.row=0;
+        VGAState.col=0;
+        VGAState.cursor=0;
+
 }
-*/
-// display only one char at the position given by CURSOR.
-void print_video_memory_char (char buffer, int color, char *video_memory_base)
+
+/* display only one char at the position given by CURSOR.*/
+void vga_print_char (char buffer, int color, char *video_memory_base)
 {
-        //char *cursor = (char *) get_cursor();
         *(video_memory_base + VGAState.cursor) = buffer;
         *(video_memory_base + VGAState.cursor + 1) = color;
 
@@ -52,10 +90,113 @@ void print_video_memory_char (char buffer, int color, char *video_memory_base)
 /* Print an entire string using print_video_memory_char.
  * update_cursor according to the lenght of the string.
  */
-void print_video_memory_str(char str[], int color, char *video_memory_base)
+void vga_print_str(char str[], struct Color_struct *color, char *video_memory_base)
 {
         for (int i = 0; str[i]!=0; i++) {
-                print_video_memory_char(str[i], color, video_memory_base);
+                vga_print_char(str[i], color->color, video_memory_base);
+                //calculate position of the folling char.
+
+                /* if the position of the following char is higher than the MAX_COL value
+                 * then print newline.
+                 */
+                if (VGAState.col+1 > MAX_COL) {
+                        vga_print_nl(video_memory_base);
+                      }
+                /* Set the cursor to the position of the following char.*/
                 update_cursor(VGAState.row, VGAState.col + 1);
+        }
+}
+
+/*calculate the Color of the foregroung from the Backgroung Color Code*/
+int extract_color_from_enum (enum VGA256_color *color)
+{
+        return (*color)/0x10;
+}
+/* Change Color_struct member according to argument given by caller. */
+void set_color_struct (struct Color_struct *color, enum VGA256_color background, enum VGA256_color foreground)
+{
+        color->background = background;
+        color->foreground = foreground;
+        int extracted_foreground = extract_color_from_enum(&(color->foreground));
+        color->color = color->background + extracted_foreground;
+
+}
+
+/* Initialize Color_struct with default value background: Black and foreground: Bright_white.
+ * Initialization color are the same as used by default (=> 0x0f).
+ */
+
+void initialize_color_struct(struct Color_struct *color)
+{
+        color->background = VGA256_Black;
+        color->foreground = VGA256_White;
+        int extracted_foreground = extract_color_from_enum(&(color->foreground));
+        color->color = color->background + extracted_foreground;
+}
+
+void initialize_message_color_struct()
+{
+        set_color_struct(&VGA_Color_Err, VGA256_Black, VGA256_Red);
+        set_color_struct(&VGA_Color_Warn, VGA256_Black, VGA256_Yellow);
+        set_color_struct(&VGA_Color_Success, VGA256_Black, VGA256_Green);
+}
+
+void vga_print_err(char str[], char *video_memory_base)
+{
+        vga_print_str(str, &VGA_Color_Err, video_memory_base);
+}
+
+void vga_print_warn(char str[], char *video_memory_base)
+{
+        vga_print_str(str, &VGA_Color_Warn, video_memory_base);
+}
+
+void vga_print_success(char str [], char *video_memory_base)
+{
+        vga_print_str(str, &VGA_Color_Success, video_memory_base);
+}
+void vga_print_message(char str[], enum Message_Type msg_type, char *video_memory_base)
+{
+        switch(msg_type) {
+                case ERROR_MESSAGE :
+                        vga_print_err(str, video_memory_base);
+                        break;
+                case WARNING_MESSAGE:
+                        vga_print_warn(str, video_memory_base);
+                        break;
+                case SUCCESS_MESSAGE :
+                        vga_print_success(str, video_memory_base);
+                        break;
+                default:
+                        vga_print_warn("VGA_print_message: MsgType do not match with Message_type enum.", video_memory_base);
+                        vga_print_warn(str,video_memory_base);
+        }
+}
+
+/* Clear only the line scpecified*/
+void vga_clear_line(int row, char *video_memory_base)
+{
+        struct Color_struct null;
+        initialize_color_struct(&null);
+        update_cursor(row, 0);
+        for (int i = 0; i < MAX_COL; i++) {
+                vga_print_str(" ", &null, video_memory_base);
+        }
+}
+
+/* Clear screen From row specified to the last row*/
+void vga_clear_screen (int row, char *video_memory_base, int save_cursor)
+{
+        int saved_row = VGAState.row;
+        int saved_col = VGAState.col;
+
+        for (int i = row; i < MAX_ROW; i++){
+                vga_clear_line(i, video_memory_base);
+        }
+
+        switch (save_cursor) {
+                case 0: update_cursor(row, 0);
+                        break;
+                default: update_cursor(saved_row, saved_col);
         }
 }

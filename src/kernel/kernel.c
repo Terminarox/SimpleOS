@@ -1,5 +1,6 @@
-#include "drivers/strings.c"
+#include "drivers/strings.h"
 #include "drivers/vga.h"
+#include "drivers/vga_supplement.h"
 #include "kernel_rc.h"
 /*      DO NOT change VGAState struct yourself.
  * You can use the api function in order to manipulate them.
@@ -24,40 +25,30 @@
  * 1 = EXIT  -> WARNING
  * 2 < EXIT_CODE -> ERROR
  */
+
 void main()
 {
         update_cursor(14,0);
 
         struct Color_struct color;
-        initialize_color_struct(&color);
-        initialize_message_color_struct();
+        __init_color_struct(&color);
+        __init_message_color_struct();
 
-        char *video_memory_base = (char*) VGA_MEMORY_COLOR_TEXT;
-
-        char ok_message[] = "OK";
-        char no_message[] = "NO";
-
-        char gdt_loaded_message[] = "32-bits protected mod: Kernel: GDT loaded.";
-        char cursor_ok_message[] = "32-bits protected mod: Kernel: Cursor: ";
-        char drivers_loaded_message[] = "32-bits protected mod: Kernel: VGA Drivers: ";
+        char *video_memory_base = VGA_MEMORY_COLOR_TEXT;
         char kernel_rc_msg[] = "32-bits protected mod: Kernel: kernel_rc_entry exit code: ";
-
-
-        vga_print_str(gdt_loaded_message, &color, video_memory_base);
+        
+        vga_print_str("32-bits protected mod: Kernel: GDT loaded.", &color, video_memory_base);
+        vga_print_nl();
+        vga_print_str("32-bits protected mod: Kernel: VGA cursor: ", &color, video_memory_base);
+        vga_print_message("OK", SUCCESS_MESSAGE, video_memory_base);
+        vga_print_nl();
+        vga_print_str("32-bits protected mod: Kernel: VGA driver: ", &color, video_memory_base);
+        vga_print_message("OK", SUCCESS_MESSAGE, video_memory_base);
         vga_print_nl();
 
-        vga_print_str(cursor_ok_message, &color, video_memory_base);
-        vga_print_message(ok_message, SUCCESS_MESSAGE, video_memory_base);
-        vga_print_nl();
-
-        vga_print_str(drivers_loaded_message, &color, video_memory_base);
-        initialize_color_struct(&color);
-        vga_print_message(ok_message, SUCCESS_MESSAGE, video_memory_base);
-        //set_color_struct(&color, VGA256_Black, VGA256_Green);
-        vga_print_nl();
         int kernel_rc_return = kernel_rc_entry(/*&Cursor, &Color, &VGA_Color_Err, &VGA_Color_Warn, &VGA_Color_Success*/);
-        char buffer[4];
-        int_to_ascii(kernel_rc_return, buffer);
+        char buffer[3];
+        int_to_ascii_buff(kernel_rc_return, buffer);
 
         vga_print_str(kernel_rc_msg, &color, video_memory_base);
 
@@ -68,5 +59,5 @@ void main()
                         break;
                 default:vga_print_message(buffer, ERROR_MESSAGE, video_memory_base);
         }
-
+        vga_print_nl();
 }

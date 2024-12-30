@@ -3,7 +3,7 @@
 #define MAX_ROW 25
 #define MAX_COL 80
 #define VGA_MEMORY_MONOCHROME_TEXT 0xB0000
-#define VGA_MEMORY_COLOR_TEXT 0xb8000
+#define VGA_MEMORY_COLOR_TEXT (char *)0xb8000
 #define VGA_MEMORY_GRAPHIC_MOD 0xA0000
 
 
@@ -26,7 +26,7 @@ enum VGA256_color {
         VGA256_Light_Red     = 0xc0,
         VGA256_Light_Magenta = 0xd0,
         VGA256_Yellow        = 0xe0,
-        VGA256_Bright_white  = 0xf0
+        VGA256_Bright_White  = 0xf0
 
 };
 
@@ -42,6 +42,13 @@ struct Color_struct {
         int color;
 };
 
+enum VGA256_color_theme {
+        VGA256_White_Black,
+        VGA256_Black_White,
+        VGA256_Blue_White,
+        VGA256_White_Blue,
+};
+
 struct Cursor {
         int row;
         int col;
@@ -50,19 +57,21 @@ struct Cursor {
 void update_cursor (int row, int col);
 void save_cursor_state (struct Cursor *cursor_save_struct);
 void restore_cursor_state (struct Cursor *cursor_restore_struct);
-void vga_print_nl ();
 
-void align_video_memory_to_cursor_offset (char **video_memory);
+int extract_color_from_enum (enum VGA256_color *color);
+void set_color_struct (struct Color_struct *color, enum VGA256_color background, enum VGA256_color foreground);
+void cpy_color_struct(struct Color_struct *destination, struct Color_struct *source);
+void __init_color_struct(struct Color_struct *color);
+void __init_message_color_struct();
+
+void __init_default_theme();
+int load_default_theme(enum VGA256_color_theme theme);
+int vga_write_active_theme(char *video_memory_base);
 
 void vga_print_char (char buffer, int color, char *video_memory_base);
 void vga_print_str(char str[], struct Color_struct *color, char *video_memory_base);
-int extract_color_from_enum (enum VGA256_color *color);
-void set_color_struct (struct Color_struct *color, enum VGA256_color background, enum VGA256_color foreground);
-void initialize_color_struct(struct Color_struct *color);
-void initialize_message_color_struct();
-
 void vga_print_message(char str[], enum Message_Type msg_type, char *video_memory_base);
-
+void vga_print_nl ();
 void vga_clear_line(int row, char *video_memory_base);
 void vga_clear_screen (int row, char *video_memory_base, int save_cursor);
 

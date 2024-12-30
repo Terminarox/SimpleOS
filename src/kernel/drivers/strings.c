@@ -1,3 +1,4 @@
+#include "vga.h"
 int strlen (char str[])
 {
         int i = 0;
@@ -17,7 +18,7 @@ int size_of (int array[])
 }
 
 
-int int_to_ascii (int nb, char str[])
+int int_to_ascii_buff (int nb, char str[])
 {
         int i = 0;
         if (nb<0) {

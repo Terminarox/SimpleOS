@@ -17,7 +17,7 @@ disk_load_second_stage:
 disk_load_kernel:
         mov ah, 02h
 
-        mov al, 40
+        mov al, 60
         mov dl, dl
 
         mov cl, 0x06

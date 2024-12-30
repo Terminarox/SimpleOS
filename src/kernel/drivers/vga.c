@@ -52,6 +52,7 @@ struct Cursor {
         int cursor;
 } VGAState;
 
+struct Color_struct message_color_struct[3];
 /* change CURSOR according to int row and int col */
 void update_cursor(int row, int col)
 {
@@ -207,7 +208,7 @@ void set_color_struct(struct Color_struct *color, enum VGA256_color foreground, 
  */
 void cpy_color_struct(struct Color_struct *destination, struct Color_struct *source)
 {
-        set_color_struct(destination, source->background, source->foreground);
+        set_color_struct(destination, source->foreground, source->background);
 }
 
 void __init_message_color_struct()
@@ -219,8 +220,8 @@ void __init_message_color_struct()
 int __init_default_theme(){
         set_color_struct(&VGA256_Theme_Black_White, VGA256_Black, VGA256_White);
         set_color_struct(&VGA256_Theme_White_Black, VGA256_White, VGA256_Black);
-        set_color_struct(&VGA256_Theme_White_Blue, VGA256_Blue, VGA256_White);
-        set_color_struct(&VGA256_Theme_Blue_White, VGA256_Bright_White, VGA256_Light_Blue);
+        set_color_struct(&VGA256_Theme_Blue_White, VGA256_Blue, VGA256_White);
+        set_color_struct(&VGA256_Theme_White_Blue, VGA256_White, VGA256_Blue);
         return 0;
 }
 /* change color theme and change message_color struct BackGround according to the theme */
@@ -228,7 +229,6 @@ int load_default_theme(enum VGA256_color_theme theme)
 {
         switch(theme) {
                 case VGA256_White_Black: cpy_color_struct(&VGA256_Active_Theme, &VGA256_Theme_White_Black);
-                                        set_color_struct(&VGA256_Color_Err, VGA256_Black, VGA256_Red);
                                         break;
                 case VGA256_Black_White: cpy_color_struct(&VGA256_Active_Theme, &VGA256_Theme_Black_White);
                                         break;
@@ -237,7 +237,10 @@ int load_default_theme(enum VGA256_color_theme theme)
                 case VGA256_White_Blue: cpy_color_struct(&VGA256_Active_Theme, &VGA256_Theme_White_Blue);
                                         break;
         }
-        return 1;
+        set_color_struct(&VGA256_Color_Err, VGA256_Red, VGA256_Active_Theme.background);
+        set_color_struct(&VGA256_Color_Warn, VGA256_Yellow, VGA256_Active_Theme.background);
+        set_color_struct(&VGA256_Color_Success, VGA256_Green, VGA256_Active_Theme.background);
+        return 0;
 }
 
 int vga_write_active_theme(char *video_memory_base){

@@ -1,4 +1,4 @@
-#define MAX_ROW 25
+        #define MAX_ROW 25
 #define MAX_COL 80
 #define VGA_MEMORY_MONOCHROME_TEXT 0xB0000
 #define VGA_MEMORY_COLOR_TEXT (char *)0xb8000

@@ -54,19 +54,23 @@ struct Cursor {
         int col;
         int cursor;
 };
-void update_cursor (int row, int col);
-void save_cursor_state (struct Cursor *cursor_save_struct);
-void restore_cursor_state (struct Cursor *cursor_restore_struct);
+void vga_update_cursor (int row, int col);
+void vga_align_video_memory_to_cursor_offset(char **video_memory_ptr);
+void vga_save_cursor_state (struct Cursor *cursor_save_struct);
+void vga_restore_cursor_state (struct Cursor *cursor_restore_struct);
 
-int extract_color_from_enum (enum VGA256_color *color);
-void set_color_struct (struct Color_struct *color, enum VGA256_color background, enum VGA256_color foreground);
-void cpy_color_struct(struct Color_struct *destination, struct Color_struct *source);
-void __init_color_struct(struct Color_struct *color);
-void __init_message_color_struct();
+int vga_extract_color_from_enum (enum VGA256_color *color);
+void vga_set_color_struct (struct Color_struct *color, enum VGA256_color background, enum VGA256_color foreground);
+void vga_cpy_color_struct(struct Color_struct *destination, struct Color_struct *source);
+void __init_vga__color_struct(struct Color_struct *color);
+void __init_vga__message_color_struct();
 
-void __init_default_theme();
-int load_default_theme(enum VGA256_color_theme theme);
+void __init_vga__default_theme();
+int vga_load_default_theme(enum VGA256_color_theme theme, struct Color_struct *color);
 int vga_write_active_theme(char *video_memory_base);
+void vga_cpy_active_theme(struct Color_struct *color);
+struct Color_struct *vga_get_active_theme_ptr();
+struct Color_struct vga_get_active_theme();
 
 void vga_print_char (char buffer, int color, char *video_memory_base);
 void vga_print_str(char str[], struct Color_struct *color, char *video_memory_base);

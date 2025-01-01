@@ -54,7 +54,7 @@ struct Cursor {
 
 struct Color_struct message_color_struct[3];
 /* change CURSOR according to int row and int col */
-void update_cursor(int row, int col)
+void vga_update_cursor(int row, int col)
 {
         VGAState.row=row;
         VGAState.col=col;
@@ -63,7 +63,7 @@ void update_cursor(int row, int col)
 
 void vga_print_nl()
 {
-        update_cursor(VGAState.row+1, 0);
+        vga_update_cursor(VGAState.row+1, 0);
 }
 
 
@@ -71,20 +71,20 @@ void vga_print_nl()
  * ONLY change CURSOR to the followirror: parameter 'row' has just a forward declarationsng ROW.
  */
 
-void save_cursor_state(struct Cursor *cursor_save_struct)
+void vga_save_cursor_state(struct Cursor *cursor_save_struct)
 {
         *cursor_save_struct=VGAState;
 }
-void restore_cursor_state(struct Cursor *cursor_restore_struct)
+void vga_restore_cursor_state(struct Cursor *cursor_restore_struct)
 {
         VGAState=*cursor_restore_struct;
 }
-void align_video_memory_to_cursor_offset(char **video_memory)
+void vga_align_video_memory_to_cursor_offset(char **video_memory_ptr)
 {
-        *video_memory=*(video_memory + VGAState.cursor);
-        VGAState.row=0;
-        VGAState.col=0;
-        VGAState.cursor=0;
+        *video_memory_ptr=(*video_memory_ptr + VGAState.cursor);
+        VGAState.row = 0;
+        VGAState.col = 0;
+        VGAState.cursor = 0;
 
 }
 
@@ -101,18 +101,18 @@ void vga_print_char(char buffer, int color, char *video_memory_base)
  */
 void vga_print_str(char str[], struct Color_struct *color, char *video_memory_base)
 {
-        for (int i = 0; str[i]!=0; i++) {
+        for (int i = 0; str[i] != 0; i++) {
                 vga_print_char(str[i], color->color, video_memory_base);
                 //calculate position of the folling char.
 
                 /* if the position of the following char is higher than the MAX_COL value
                  * then print newline.
                  */
-                if (VGAState.col+1 > MAX_COL) {
+                if (VGAState.col + 1 > MAX_COL) {
                         vga_print_nl(video_memory_base);
                       }
                 /* Set the cursor to the position of the following char.*/
-                update_cursor(VGAState.row, VGAState.col + 1);
+                vga_update_cursor(VGAState.row, VGAState.col + 1);
         }
 }
 
@@ -157,7 +157,7 @@ int extract_color_from_enum(enum VGA256_color *color)
         return (*color)/0x10;
 }
 
-void __init_color_struct(struct Color_struct *color)
+void __init_vga__color_struct(struct Color_struct *color)
 {
         color->background = VGA256_Black;
         color->foreground = VGA256_White;
@@ -169,8 +169,8 @@ void __init_color_struct(struct Color_struct *color)
 void vga_clear_line(int row, char *video_memory_base)
 {
         struct Color_struct null;
-        __init_color_struct(&null);
-        update_cursor(row, 0);
+        __init_vga__color_struct(&null);
+        vga_update_cursor(row, 0);
         for (int i = 0; i < MAX_COL; i++) {
                 vga_print_str(" ", &null, video_memory_base);
         }
@@ -187,14 +187,14 @@ void vga_clear_screen(int row, char *video_memory_base, int save_cursor)
         }
 
         switch (save_cursor) {
-                case 0: update_cursor(row, 0);
+                case 0: vga_update_cursor(row, 0);
                         break;
-                default: update_cursor(saved_row, saved_col);
+                default: vga_update_cursor(saved_row, saved_col);
         }
 }
 
 /* Change Color_struct member according to argument given by caller. */
-void set_color_struct(struct Color_struct *color, enum VGA256_color foreground, enum VGA256_color background)
+void vga_set_color_struct(struct Color_struct *color, enum VGA256_color foreground, enum VGA256_color background)
 {
         color->background = background;
         color->foreground = foreground;
@@ -206,53 +206,81 @@ void set_color_struct(struct Color_struct *color, enum VGA256_color foreground, 
 /* Initialize Color_struct with default value background: Black; and foreground: Bright_white.
  * Initialization color are the same as used by default (=> 0x0f).
  */
-void cpy_color_struct(struct Color_struct *destination, struct Color_struct *source)
+void vga_cpy_color_struct(struct Color_struct *destination, struct Color_struct *source)
 {
-        set_color_struct(destination, source->foreground, source->background);
+        vga_set_color_struct(destination, source->foreground, source->background);
 }
 
-void __init_message_color_struct()
+void __init_vga__message_color_struct()
 {
-        set_color_struct(&VGA256_Color_Err, VGA256_Red, VGA256_Black);
-        set_color_struct(&VGA256_Color_Warn, VGA256_Yellow, VGA256_Black);
-        set_color_struct(&VGA256_Color_Success, VGA256_Green, VGA256_Black);
+        vga_set_color_struct(&VGA256_Color_Err, VGA256_Red, VGA256_Black);
+        vga_set_color_struct(&VGA256_Color_Warn, VGA256_Yellow, VGA256_Black);
+        vga_set_color_struct(&VGA256_Color_Success, VGA256_Green, VGA256_Black);
 }
-int __init_default_theme(){
-        set_color_struct(&VGA256_Theme_Black_White, VGA256_Black, VGA256_White);
-        set_color_struct(&VGA256_Theme_White_Black, VGA256_White, VGA256_Black);
-        set_color_struct(&VGA256_Theme_Blue_White, VGA256_Blue, VGA256_White);
-        set_color_struct(&VGA256_Theme_White_Blue, VGA256_White, VGA256_Blue);
+int __init_vga__default_theme(){
+        vga_set_color_struct(&VGA256_Theme_Black_White, VGA256_Black, VGA256_White);
+        vga_set_color_struct(&VGA256_Theme_White_Black, VGA256_White, VGA256_Black);
+        vga_set_color_struct(&VGA256_Theme_Blue_White, VGA256_Blue, VGA256_Bright_White);
+        vga_set_color_struct(&VGA256_Theme_White_Blue, VGA256_Bright_White, VGA256_Blue);
         return 0;
 }
+
+struct Color_struct *vga_get_active_theme_ptr()
+{
+                return &VGA256_Active_Theme;
+}
+/* not working. set color black on black */
+struct Color_struct vga_get_active_theme()
+{
+        return VGA256_Active_Theme;
+}
+
+void vga_cpy_active_theme(struct Color_struct *color)
+{
+        vga_cpy_color_struct(color, &VGA256_Active_Theme);
+}
+
 /* change color theme and change message_color struct BackGround according to the theme */
-int load_default_theme(enum VGA256_color_theme theme)
+int vga_load_default_theme(enum VGA256_color_theme theme, struct Color_struct *color)
 {
         switch(theme) {
-                case VGA256_White_Black: cpy_color_struct(&VGA256_Active_Theme, &VGA256_Theme_White_Black);
+                case VGA256_White_Black: vga_cpy_color_struct(&VGA256_Active_Theme, &VGA256_Theme_White_Black);
                                         break;
-                case VGA256_Black_White: cpy_color_struct(&VGA256_Active_Theme, &VGA256_Theme_Black_White);
+                case VGA256_Black_White: vga_cpy_color_struct(&VGA256_Active_Theme, &VGA256_Theme_Black_White);
                                         break;
-                case VGA256_Blue_White: cpy_color_struct(&VGA256_Active_Theme, &VGA256_Theme_Blue_White);
+                case VGA256_Blue_White: vga_cpy_color_struct(&VGA256_Active_Theme, &VGA256_Theme_Blue_White);
                                         break;
-                case VGA256_White_Blue: cpy_color_struct(&VGA256_Active_Theme, &VGA256_Theme_White_Blue);
+                case VGA256_White_Blue: vga_cpy_color_struct(&VGA256_Active_Theme, &VGA256_Theme_White_Blue);
                                         break;
         }
-        set_color_struct(&VGA256_Color_Err, VGA256_Red, VGA256_Active_Theme.background);
-        set_color_struct(&VGA256_Color_Warn, VGA256_Yellow, VGA256_Active_Theme.background);
-        set_color_struct(&VGA256_Color_Success, VGA256_Green, VGA256_Active_Theme.background);
+        vga_cpy_active_theme(color);
         return 0;
 }
 
 int vga_write_active_theme(char *video_memory_base){
-        struct Color_struct color;
-        __init_color_struct(&color);
-        set_color_struct(&color, VGA256_Blue, VGA256_Green);
-        //vga_print_str("this is a test of active them color struct", &VGA256_Active_Theme, VGA_MEMORY_COLOR_TEXT);
-        for (int i = 0; i < 2*(25*80); i=i+2) {
-                if (*(video_memory_base+i+1)!=VGA256_Color_Err.color && *(video_memory_base+i+1)!=VGA256_Color_Warn.color && *(video_memory_base+i+1)!=VGA256_Color_Success.color)
-                {
+        struct Color_struct local_msg_color_err;
+        struct Color_struct local_msg_color_warn;
+        struct Color_struct local_msg_color_success;
+
+        vga_set_color_struct(&local_msg_color_err, VGA256_Color_Err.foreground, VGA256_Active_Theme.background);
+        vga_set_color_struct(&local_msg_color_warn, VGA256_Color_Warn.foreground, VGA256_Active_Theme.background);
+        vga_set_color_struct(&local_msg_color_success, VGA256_Color_Success.foreground, VGA256_Active_Theme.background);
+
+        for (int i = 0; i < 2*(25*80); i = i + 2) {
+                if (*(video_memory_base+i+1)!=VGA256_Color_Err.color && *(video_memory_base+i+1)!=VGA256_Color_Warn.color && *(video_memory_base+i+1)!=VGA256_Color_Success.color) {
                         *(video_memory_base+i+1) = VGA256_Active_Theme.color;
                 }
+                else {
+                        if (*(video_memory_base + i + 1) == VGA256_Color_Err.color)
+                                *(video_memory_base + i + 1) = local_msg_color_err.color;
+                        else if (*(video_memory_base + i + 1) == VGA256_Color_Warn.color)
+                                *(video_memory_base + i + 1) = local_msg_color_warn.color;
+                        else if (*(video_memory_base + i + 1) == VGA256_Color_Success.color)
+                                *(video_memory_base + i + 1) = local_msg_color_success.color;
+                }
         }
+        vga_set_color_struct(&VGA256_Color_Err, VGA256_Red, VGA256_Active_Theme.background);
+        vga_set_color_struct(&VGA256_Color_Warn, VGA256_Yellow, VGA256_Active_Theme.background);
+        vga_set_color_struct(&VGA256_Color_Success, VGA256_Green, VGA256_Active_Theme.background);
         return 0;
 }

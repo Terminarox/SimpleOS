@@ -28,29 +28,30 @@
 
 void main()
 {
-        update_cursor(14,0);
+        vga_update_cursor(14,0);
 
         struct Color_struct color;
-        __init_color_struct(&color);
-        __init_message_color_struct();
+        __init_vga__color_struct(&color);
+        __init_vga__message_color_struct();
 
         char *video_memory_base = VGA_MEMORY_COLOR_TEXT;
         char kernel_rc_msg[] = "32-bits protected mod: Kernel: kernel_rc_entry exit code: ";
-        
+
         vga_print_str("32-bits protected mod: Kernel: GDT loaded.", &color, video_memory_base);
         vga_print_nl();
         vga_print_str("32-bits protected mod: Kernel: VGA cursor: ", &color, video_memory_base);
-        vga_print_message("OK", SUCCESS_MESSAGE, video_memory_base);
+        vga_print_message("[OK]", SUCCESS_MESSAGE, video_memory_base);
         vga_print_nl();
         vga_print_str("32-bits protected mod: Kernel: VGA driver: ", &color, video_memory_base);
-        vga_print_message("OK", SUCCESS_MESSAGE, video_memory_base);
+        vga_print_message("[OK]", SUCCESS_MESSAGE, video_memory_base);
         vga_print_nl();
 
+        struct Color_struct active_theme=vga_get_active_theme();
         int kernel_rc_return = kernel_rc_entry(/*&Cursor, &Color, &VGA_Color_Err, &VGA_Color_Warn, &VGA_Color_Success*/);
         char buffer[3];
         int_to_ascii_buff(kernel_rc_return, buffer);
 
-        vga_print_str(kernel_rc_msg, &color, video_memory_base);
+        vga_print_str(kernel_rc_msg, &active_theme, video_memory_base);
 
         switch (kernel_rc_return) {
                 case 0: vga_print_message(buffer, SUCCESS_MESSAGE,video_memory_base);
@@ -60,4 +61,5 @@ void main()
                 default:vga_print_message(buffer, ERROR_MESSAGE, video_memory_base);
         }
         vga_print_nl();
+        //vga_write_active_theme(video_memory_base);
 }

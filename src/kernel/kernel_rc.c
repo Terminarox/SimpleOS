@@ -10,13 +10,30 @@ int kernel_rc_entry()
         vga_print_nl();
         __init_vga__default_theme();
 
-
         vga_load_default_theme(VGA256_White_Blue, &color);
         vga_print_str("test", &color, VGA_MEMORY_COLOR_TEXT);
+	vga_print_nl();
 
         busy_wait(1);
         vga_write_active_theme(VGA_MEMORY_COLOR_TEXT);
-        vga_print_nl();
-        //vga_print_str("\n\r", &color, VGA_MEMORY_COLOR_TEXT);
-        return 0;
+
+	busy_wait(1);
+	vga_load_default_theme(VGA256_Blue_White, &color);
+	vga_write_active_theme(VGA_MEMORY_COLOR_TEXT);
+        vga_print_str("this is test2", &color, VGA_MEMORY_COLOR_TEXT);
+	vga_print_nl();
+
+	busy_wait(1);
+	vga_load_default_theme(VGA256_Black_White, &color);
+	vga_write_active_theme(VGA_MEMORY_COLOR_TEXT);
+	vga_print_str("this is test3", &color, VGA_MEMORY_COLOR_TEXT);
+	vga_print_nl();
+
+	busy_wait(1);
+	vga_load_default_theme(VGA256_White_Black, &color);
+        vga_write_active_theme(VGA_MEMORY_COLOR_TEXT);
+	vga_print_str("this is test3", &color, VGA_MEMORY_COLOR_TEXT);
+	vga_print_nl();
+
+	return 0;
 }

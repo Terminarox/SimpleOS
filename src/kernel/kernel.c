@@ -46,12 +46,12 @@ void main()
         vga_print_message("[OK]", SUCCESS_MESSAGE, video_memory_base);
         vga_print_nl();
 
-        struct Color_struct active_theme=vga_get_active_theme();
+        struct Color_struct *active_theme=vga_get_active_theme_ptr();
         int kernel_rc_return = kernel_rc_entry(/*&Cursor, &Color, &VGA_Color_Err, &VGA_Color_Warn, &VGA_Color_Success*/);
         char buffer[3];
         int_to_ascii_buff(kernel_rc_return, buffer);
 
-        vga_print_str(kernel_rc_msg, &active_theme, video_memory_base);
+        vga_print_str(kernel_rc_msg, active_theme, video_memory_base);
 
         switch (kernel_rc_return) {
                 case 0: vga_print_message(buffer, SUCCESS_MESSAGE,video_memory_base);
